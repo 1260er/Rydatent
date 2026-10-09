@@ -4,3 +4,14 @@ android { namespace 'de.pritwerk.rydatent'; compileSdk 37
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
 dependencies { testImplementation 'junit:junit:4.13.2' }
+
+// Persistent signing for CI development APKs.
+if (System.getenv("RYDATENT_DEV_KEYSTORE")) {
+    android.signingConfigs.debug.storeFile =
+        file(System.getenv("RYDATENT_DEV_KEYSTORE"))
+    android.signingConfigs.debug.storePassword =
+        System.getenv("RYDATENT_DEV_PASSWORD")
+    android.signingConfigs.debug.keyAlias = "rydatentdev"
+    android.signingConfigs.debug.keyPassword =
+        System.getenv("RYDATENT_DEV_PASSWORD")
+}
