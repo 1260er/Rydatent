@@ -25,7 +25,7 @@ jobs:
         uses: android-actions/setup-android@v4
 
       - name: Install Android API 37
-        run: sdkmanager "platforms;android-37"
+        run: sdkmanager "platforms;android-37.0"
 
       - name: Restore development signing key
         env:
