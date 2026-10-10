@@ -50,6 +50,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
 
+        getSplashScreen().setOnExitAnimationListener(splash -> splash.remove());
+
         Prefs.get(this)
                 .edit()
                 .remove("test_number")
