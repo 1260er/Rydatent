@@ -26,12 +26,18 @@ public class LogicTest {
         assertTrue(Logic.smsCooldownElapsed(0L, 1_000_001L));
     }
 
-    @Test public void blitzerWatchRequiresEvidenceAndConnection() {
-        assertTrue(Logic.mayRestartBlitzer(true, true, true, false, 60_000L));
-        assertFalse(Logic.mayRestartBlitzer(false, true, true, false, 60_000L));
-        assertFalse(Logic.mayRestartBlitzer(true, false, true, false, 60_000L));
-        assertFalse(Logic.mayRestartBlitzer(true, true, false, false, 60_000L));
-        assertFalse(Logic.mayRestartBlitzer(true, true, true, true, 60_000L));
-        assertFalse(Logic.mayRestartBlitzer(true, true, true, false, 59_999L));
+    @Test public void blitzerWatchRunsOnlyWithSelectedConnectedBt() {
+        assertTrue(Logic.shouldWatchBlitzer(true, true));
+        assertFalse(Logic.shouldWatchBlitzer(false, true));
+        assertFalse(Logic.shouldWatchBlitzer(true, false));
+    }
+
+    @Test public void absenceAllowsRestartWithoutPreviousNotification() {
+        assertTrue(Logic.shouldRestartMissingNotification(true, true, false, 15_000L, 0L));
+        assertFalse(Logic.shouldRestartMissingNotification(true, true, true, 15_000L, 0L));
+        assertFalse(Logic.shouldRestartMissingNotification(true, false, false, 15_000L, 0L));
+        assertFalse(Logic.shouldRestartMissingNotification(false, true, false, 15_000L, 0L));
+        assertFalse(Logic.shouldRestartMissingNotification(true, true, false, 30_000L, 60_000L));
+        assertTrue(Logic.shouldRestartMissingNotification(true, true, false, 60_000L, 60_000L));
     }
 }

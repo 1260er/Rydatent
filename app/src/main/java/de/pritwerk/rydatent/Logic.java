@@ -22,10 +22,13 @@ public final class Logic {
         return previous == 0L || now - previous >= 600_000L;
     }
 
-    public static boolean mayRestartBlitzer(boolean enabled, boolean connected,
-                                            boolean observedBefore, boolean notificationPresent,
-                                            long elapsedSinceLastStartMillis) {
-        return enabled && connected && observedBefore && !notificationPresent
-                && elapsedSinceLastStartMillis >= 60_000L;
+    public static boolean shouldWatchBlitzer(boolean enabled, boolean connected) {
+        return enabled && connected;
+    }
+
+    public static boolean shouldRestartMissingNotification(boolean enabled,
+            boolean connected, boolean notificationPresent, long nowElapsed, long retryAfterElapsed) {
+        return shouldWatchBlitzer(enabled, connected)
+                && !notificationPresent && nowElapsed >= retryAfterElapsed;
     }
 }

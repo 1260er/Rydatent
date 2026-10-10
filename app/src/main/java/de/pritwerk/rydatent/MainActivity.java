@@ -18,11 +18,15 @@ import java.util.*;
 public class MainActivity extends Activity {
  LinearLayout layout;
  @Override protected void onCreate(Bundle b){super.onCreate(b); draw();}
+ @Override protected void onResume(){super.onResume(); BlitzerWatchService.sync(this);}
  private void title(String t){TextView v=new TextView(this);v.setText(t);v.setTextSize(17);v.setPadding(12,18,12,8);layout.addView(v);}
  private void button(String t,Runnable r){Button b=new Button(this);b.setText(t);layout.addView(b);b.setOnClickListener(v->r.run());}
- private void checkbox(String label, String key){CheckBox c=new CheckBox(this); c.setText(label);c.setChecked(Prefs.get(this).getBoolean(key,false));layout.addView(c);c.setOnCheckedChangeListener((x,v)->Prefs.get(this).edit().putBoolean(key,v).apply());}
+ private void checkbox(String label, String key){CheckBox c=new CheckBox(this); c.setText(label);c.setChecked(Prefs.get(this).getBoolean(key,false));layout.addView(c);c.setOnCheckedChangeListener((x,v)->{
+  Prefs.get(this).edit().putBoolean(key,v).apply();
+  if("blitzer_enabled".equals(key)) BlitzerWatchService.sync(this);
+ });}
  private void draw(){ScrollView sc=new ScrollView(this);layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);layout.setPadding(18,12,18,12);sc.addView(layout);setContentView(sc);
- title("Rydatent 0.1.0-dev.2 – Machbarkeitstest");
+ title("Rydatent 0.1.0-dev.3 – Machbarkeitstest");
  title("1. Berechtigungen");button("Bluetooth / Kontakte / SMS-Versand anfordern",()->requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.READ_CONTACTS,Manifest.permission.SEND_SMS},10));
  button("Anruffilter-Rolle anfordern",()->{RoleManager rm=getSystemService(RoleManager.class);if(rm!=null && rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING))Toast.makeText(this,"Anruffilter bereits aktiv",Toast.LENGTH_SHORT).show();else if(rm!=null && rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING))startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING),22);else Toast.makeText(this,"Rolle nicht verfügbar",Toast.LENGTH_LONG).show();});
  title("2. Gekoppelte Bluetooth-Geräte");
@@ -32,8 +36,9 @@ public class MainActivity extends Activity {
  for(BluetoothDevice d:paired){String addr=d.getAddress();title(d.getName()+" ("+addr+")");choice("Blitzer.de", "blitzer",addr);choice("Anruf-Test", "sms",addr);}
  }
  title("3. Blitzer.de");checkbox("Bluetooth-Automatik aktivieren", "blitzer_enabled");button("Start-Intent manuell testen",()->{Blitzer.command(this,true);draw();});button("Stop-Intent manuell testen",()->{Blitzer.command(this,false);draw();});
- title("Blitzer-Wache: nutzt eine laufende Benachrichtigung von Blitzer.de und prueft sie nach dem Entfernen erneut.");
+ title("Fahrmodus: prueft bei verbundenem ausgewaehltem Bluetooth alle 15 Sekunden die Blitzer.de-Benachrichtigung.");
  button("Benachrichtigungszugriff erteilen",()->startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));
+ button("Fahrmodus-Benachrichtigung erlauben",()->requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},11));
  title("4. Anruf-Test (nur freigegebene Nummer!)");EditText number=new EditText(this);number.setHint("Exakte Testnummer mit Vorwahl");number.setInputType(InputType.TYPE_CLASS_PHONE);number.setText(Prefs.get(this).getString("test_number",""));layout.addView(number);
  button("Testnummer speichern",()->{Prefs.get(this).edit().putString("test_number",number.getText().toString().trim()).apply();Toast.makeText(this,"Testnummer gespeichert",Toast.LENGTH_SHORT).show();});
  checkbox("SMS und Anrufabweisung für Testnummer aktivieren", "reply_enabled");
@@ -46,10 +51,13 @@ public class MainActivity extends Activity {
  NotificationManager nm=getSystemService(NotificationManager.class);
  boolean access=nm!=null && nm.isNotificationListenerAccessGranted(new ComponentName(this,BlitzerListener.class));
  title("Blitzer-Wache / Benachrichtigungszugriff: "+(access?"freigegeben":"nicht freigegeben"));
+ title("Fahrmodus-Dienst: "+(BlitzerWatchService.running()?"aktiv":"nicht aktiv"));
  button("Anzeige aktualisieren",this::draw);
  title("6. Diagnoseprotokoll (neueste zuerst)");
  title(Prefs.get(this).getString("event_history","Noch keine Ereignisse"));
  button("Protokoll loeschen",()->{Prefs.clearHistory(this);draw();});
  }
- private void choice(String label,String type,String addr){CheckBox c=new CheckBox(this);c.setText(label);c.setChecked(Prefs.chosen(this,type).contains(addr));layout.addView(c);c.setOnCheckedChangeListener((b,yes)->{Set<String> s=Prefs.chosen(this,type);if(yes)s.add(addr);else s.remove(addr);Prefs.get(this).edit().putStringSet("choose_"+type,s).apply();});}
+ private void choice(String label,String type,String addr){CheckBox c=new CheckBox(this);c.setText(label);c.setChecked(Prefs.chosen(this,type).contains(addr));layout.addView(c);c.setOnCheckedChangeListener((b,yes)->{Set<String> s=Prefs.chosen(this,type);if(yes)s.add(addr);else s.remove(addr);Prefs.get(this).edit().putStringSet("choose_"+type,s).apply();
+  if("blitzer".equals(type)) BlitzerWatchService.sync(this);
+ });}
 }
