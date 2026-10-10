@@ -1,77 +1,88 @@
-# Rydatent – Entwicklungskandidat 0.1.0-dev.5
+# Rydatent – Entwicklungskandidat 0.1.0-dev.6
 
 Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
 
 ## Funktionsumfang
-- Bluetooth-Multiwahl je Funktion und bekannte Start-/Stopp-Intents fuer Blitzer.de PRO unveraendert.
-- **Blitzer-Wache:** Bei aktivierter Bluetooth-Automatik und mindestens einer
-  als verbunden erfassten ausgewählten Bluetooth-Verbindung laeuft ein Android-
-  Vordergrunddienst mit sichtbarer Statusbenachrichtigung. Er fragt **alle 15 Sekunden**
-  ueber den zuvor freigegebenen NotificationListenerService ab, ob wenigstens eine
-  Benachrichtigung von `de.blitzer.plus` vorhanden ist. Ist sie nicht vorhanden,
-  sendet er einen Start-Intent. Bei weiterhin fehlender Benachrichtigung wiederholt
-  er den Versuch im Abstand von mindestens 45 Sekunden; das verhindert Start-Spam.
-  Nach dem Ende der letzten passenden Verbindung stoppt der Vordergrunddienst.
-  Wenn der Benutzer die Bluetooth-Automatik oder Geraeteauswahl aendert, wird der
-  Dienst ebenfalls angepasst. Die urspruengliche Bluetooth-Start-/Stopp-Logik bleibt.
-- Diagnoseprotokoll schreibt Zustandsaenderungen (vorhanden/fehlt/unbekannt) und
-  Restartversuche, **nicht** jede der 15-Sekunden-Abfragen (weniger I/O und Akku).
-- Anruf-Automatik bei aktivierter Funktion und ausgewaehltem verbundenem Bluetooth:
-  **jeden eingehenden Anruf abweisen unabhaengig vom SMS-Sendestatus**. Wenn eine Rufnummer
-  vorhanden ist, wird hoechstens einmal pro Nummer innerhalb von 10 Minuten die Fahr-SMS
-  angestossen. Unterdrueckte oder fehlende Rufnummern werden abgewiesen, koennen aber
-  keine SMS erhalten.
-- Lokales Diagnoseprotokoll mit bis zu 30 Zeitstempel-Eintraegen, ohne Rufnummern.
+- Bluetooth-Multiwahl je Funktion und bekannte Start-/Stopp-Intents fuer Blitzer.de PRO.
+- Die Anruf-Automatik weist bei aktivierter Funktion und ausgewaehltem verbundenem
+  Bluetooth jeden eingehenden Anruf ab. Wenn eine Rufnummer vorhanden ist, wird
+  hoechstens einmal pro Nummer innerhalb von 10 Minuten die Fahr-SMS angestossen.
 - Keine Verarbeitung eingehender SMS oder Messenger-Nachrichten.
+- Der Fahrmodus laeuft als Android-Foreground-Service, sobald mindestens eine aktive
+  Fahrfunktion ein ausgewaehltes verbundenes Bluetooth-Geraet verwendet.
+- Die sichtbare Rydatent-Dauerbenachrichtigung lautet nur "Fahrmodus aktiv".
+- Solange der Fahrmodus-Dienst laeuft, schreibt er alle 15 Sekunden einen Heartbeat.
+  Ein Heartbeat, der aelter als 45 Sekunden ist, wird als nicht mehr reagierender
+  Dienst bewertet.
+- Bei aktiver Blitzer-Automatik prueft derselbe 15-Sekunden-Takt ueber den
+  NotificationListenerService, ob eine Benachrichtigung von de.blitzer.plus vorhanden
+  ist. Fehlt sie, wird Blitzer.de neu gestartet. Weitere Startversuche werden auf
+  mindestens 45 Sekunden begrenzt.
+- Der Schalter "Nach Geraeteneustart automatisch aktivieren" bestimmt, ob die
+  Fahr-Automatik nach BOOT_COMPLETED sofort wieder scharf ist. Ist der Schalter aus,
+  aktiviert das einmalige Oeffnen von Rydatent die Automatik fuer die aktuelle Sitzung.
+- Nach einem App-Update wird ein zuvor aktiver Laufzeitzustand beibehalten und der
+  Fahrmodus-Dienst bei Bedarf erneut angefordert.
+- Das Diagnoseprotokoll speichert Zustandsaenderungen, aber nicht jeden Heartbeat.
 
-## Wichtige Grenzen
-- Rydatent braucht `BLUETOOTH_CONNECT` fuer gekoppelte Geraete und als Laufzeitvoraussetzung
-  des `connectedDevice`-Vordergrunddienstes. `READ_CONTACTS` bleibt absichtlich erforderlich,
-  damit Android dem CallScreeningService auch Anrufe gespeicherter Kontakte uebergibt.
-  `SEND_SMS` ist fuer die Fahrantwort erforderlich. Der **Benachrichtigungszugriff** ist
-  erforderlich, weil die Blitzer-Wache dessen aktive Benachrichtigung prueft.
-  `POST_NOTIFICATIONS` bleibt erforderlich, damit die sichtbare Benachrichtigung
-  "Fahrmodus aktiv" im Benachrichtigungsbereich erscheint.
-- Eine Benachrichtigung ist nur das vereinbarte Indiz fuer eine aktive Blitzer-App,
-  kein Nachweis, dass die Warnfunktion technisch arbeitet. Eine andere noch sichtbare
-  Blitzer.de-Benachrichtigung kann einen Neustart verhindern.
-- Auf Android 12+ darf ein Hintergrund-Broadcast nicht immer einen Vordergrunddienst
-  starten. Ein solcher Fehler wird im Diagnoseprotokoll angezeigt. Bei bestehender
-  Verbindung kann der Dienst durch Oeffnen von Rydatent erneut gestartet werden.
-  Wenn das beim Bluetooth-Verbinden auf GrapheneOS reproduzierbar scheitert,
-  brauchen wir einen Android-konformen Trigger (z. B. Companion Device Manager).
-- 15 Sekunden sind das **gewuenschte Prüfintervall im aktiven Dienst**, keine
-  Echtzeitgarantie bei Android-Energiespar- oder Prozessbeschraenkungen.
-- Der Bluetooth-Zustand beruht noch auf ACL-Ereignissen; eine unabhaengige
-  Synchronisation nach Reboot oder verpassten Ereignissen fehlt.
-- Die CallScreeningService-Rolle muss vorhanden sein. Es werden keine Berechtigungen
-  fuer eingehende SMS, Telefonstatus oder das direkte Fuehren von Anrufen angefordert.
-- SMS nutzt die Standard-SIM; SIM-1-Auswahl und echte Zustellbestaetigung fehlen.
-- dev.4 zeigt Hintergrundbeschraenkung und Akkuoptimierungs-Ausnahme getrennt an.
-  Der Nutzer kann die Android-App-Einstellungen zum Anpassen oeffnen.
-- CI kontrolliert Tests, Lint, Builds und den Dev-Signaturfingerabdruck und
-  veroeffentlicht bei exakt passendem, bereits gepushtem Dev-Tag die APK
-  direkt als GitHub-Prerelease. Kein lokaler APK-Download erforderlich.
+## Berechtigungen
+- BLUETOOTH_CONNECT: gekoppelte und verbundene Fahrgeraete sowie connectedDevice-Dienst.
+- READ_CONTACTS: erforderlich, damit CallScreeningService auch gespeicherte Kontakte
+  zur Anrufpruefung erhaelt.
+- SEND_SMS: automatische Fahrantwort.
+- POST_NOTIFICATIONS: sichtbare Fahrmodus-Benachrichtigung.
+- FOREGROUND_SERVICE und FOREGROUND_SERVICE_CONNECTED_DEVICE: Fahrmodus-Dienst.
+- RECEIVE_BOOT_COMPLETED: optionale automatische Aktivierung nach Geraeteneustart.
+  Dafuer gibt es keinen separaten Laufzeit-Berechtigungsdialog.
+- CallScreeningService-Rolle: Anrufe pruefen und abweisen.
+- Benachrichtigungszugriff: aktive Blitzer.de-Benachrichtigung pruefen.
+- Es werden weiterhin keine Berechtigungen fuer eingehende SMS, direkten Anrufaufbau
+  oder allgemeinen Telefonstatus angefordert.
 
-## Reproduzierbarer Test
-1. Dev.5 ueber Obtainium installieren. Bluetooth, Kontakte, SMS-Versand,
-   Anruffilter-Rolle, Benachrichtigungszugriff und Fahrmodus-Benachrichtigung pruefen.
-2. Mit ausgewaehltem Bluetooth verbinden: Blitzer startet; die Rydatent-
-   Benachrichtigung "Fahrmodus aktiv" erscheint und das Protokoll zeigt
-   den Start. Blitzer soll eine eigene Benachrichtigung erzeugen.
-3. Blitzer.de manuell schliessen: innerhalb des naechsten 15-Sekunden-Takts
-   soll bei fehlender Blitzer-Benachrichtigung ein Startversuch erfolgen.
-4. Mehrfaches Schliessen pruefen. Ist die Blitzer-Benachrichtigung laenger
-   nicht verfuegbar, darf kein sekundenweises Start-Spamming auftreten.
-5. Ausgewaehlte Bluetooth-Verbindung trennen: Blitzer wird beendet, die
-   Rydatent-Fahrmodus-Benachrichtigung verschwindet; keine Neustarts mehr.
-6. Mit gesperrtem Bildschirm erneut verbinden und den Fahrmodus pruefen.
-   Bei Fehler zuerst das Diagnoseprotokoll auswerten.
-7. Anruf-Smoke-Test: Zwei Anrufe derselben Nummer binnen 10 Minuten:
-   beide abweisen, nur eine SMS anstossen. Danach von einer zweiten Nummer anrufen:
-   auch diesen Anruf abweisen und fuer diese Nummer eine SMS anstossen.
+## Zuverlaessigkeit und Grenzen
+- START_STICKY bleibt fuer normale Android-Prozesswiederherstellung aktiv.
+- Der persistierte Heartbeat ersetzt die bisherige rein prozesslokale Statusanzeige.
+- Beim Geraeteneustart wird die gespeicherte Liste verbundener Bluetooth-Geraete
+  absichtlich geloescht, damit kein Zustand aus der vorherigen Sitzung als aktuell gilt.
+- Danach basiert die Verbindungserkennung weiterhin auf neuen ACL-Verbindungsereignissen.
+  Ein bereits vor BOOT_COMPLETED aufgebauter Bluetooth-Link kann deshalb weiterhin eine
+  spaetere direkte Verbindungssynchronisation erforderlich machen.
+- Ein vom Benutzer erzwungener App-Stopp wird nicht umgangen.
+- Android kann Starts eines Foreground-Service aus bestimmten Hintergrundsituationen
+  blockieren. Solche Fehler werden im Diagnoseprotokoll festgehalten.
+- Eine sichtbare Blitzer.de-Benachrichtigung ist nur das vereinbarte Laufzeit-Indiz und
+  kein technischer Nachweis, dass die Warnfunktion selbst korrekt arbeitet.
+- SMS nutzt derzeit die Standard-SIM. Eine feste SIM-1-Auswahl und echte
+  Zustellbestaetigung sind noch nicht implementiert.
+
+## Smoke-Test fuer die Entwicklungsbasis
+1. Dev.6 ueber Obtainium installieren und Rydatent einmal oeffnen.
+2. Bluetooth, Kontakte, SMS-Versand, Call-Screening-Rolle,
+   Benachrichtigungszugriff und Fahrmodus-Benachrichtigung kontrollieren.
+3. Autostart einschalten.
+4. Mit dem ausgewaehlten Blitzer-Bluetooth verbinden. Blitzer.de muss starten und
+   die Rydatent-Benachrichtigung muss ausschliesslich "Fahrmodus aktiv" anzeigen.
+5. Nach mindestens 15 Sekunden die Statusanzeige aktualisieren. Der Fahrmodus-Dienst
+   muss "aktiv und reagiert" melden.
+6. Blitzer.de manuell schliessen. Innerhalb des naechsten Prueftakts muss bei fehlender
+   Blitzer-Benachrichtigung ein Startversuch erfolgen. Wiederholungen duerfen nicht
+   sekundenweise gespammt werden.
+7. Verbindung trennen. Wenn keine andere Fahrfunktion ein passendes Bluetooth-Geraet
+   verwendet, muss die Fahrmodus-Benachrichtigung verschwinden.
+8. Mit dem ausgewaehlten Motorrad-Bluetooth verbinden. Der Fahrmodus-Dienst muss auch
+   fuer die Anruf-Automatik aktiv sein.
+9. Zwei Anrufe derselben Nummer innerhalb von 10 Minuten: beide abweisen, nur eine SMS.
+10. Von einer zweiten Nummer anrufen: Anruf abweisen und fuer diese Nummer eine SMS.
+11. Geraet mit eingeschaltetem Autostart neu starten. Rydatent danach nicht oeffnen.
+    Anschliessend ein ausgewaehltes Bluetooth-Geraet verbinden und pruefen, dass die
+    entsprechende Automatik und der Fahrmodus-Dienst starten.
+12. Optional Autostart ausschalten und neu starten. Vor dem Oeffnen von Rydatent darf
+    die Fahr-Automatik nicht aktiv werden; nach dem Oeffnen gilt sie wieder fuer die
+    aktuelle Sitzung.
+
+Besteht dieser Smoke-Test, ist dev.6 die vorgesehene Entwicklungsbasis.
 
 ## Lokale Qualitaetspruefung
-`./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease`
+./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease
 
-Android SDK `platforms;android-37.0`, Gradle 9.8.1 und AGP 9.4.0 im Projekt.
+Android SDK platforms;android-37.0, Gradle 9.8.1 und AGP 9.4.0 im Projekt.

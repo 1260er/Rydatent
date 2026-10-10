@@ -19,10 +19,13 @@ public class CallService extends CallScreeningService {
                 ? null : call.getHandle().getSchemeSpecificPart();
         boolean enabled = Prefs.get(this).getBoolean("reply_enabled", false);
         boolean connected = Prefs.connected(this, "sms");
-        boolean reject = Logic.shouldRejectCall(enabled, connected);
+        boolean runtimeEnabled = Prefs.runtimeEnabled(this);
+        boolean reject = Logic.shouldRejectCall(
+                runtimeEnabled, enabled, connected);
 
         String reason;
-        if (!enabled) reason = "Anrufautomatik deaktiviert";
+        if (!runtimeEnabled) reason = "Automatik nach Neustart noch nicht aktiviert";
+        else if (!enabled) reason = "Anrufautomatik deaktiviert";
         else if (!connected) reason = "kein ausgewähltes Anruf-Bluetooth erkannt";
         else reason = "Anrufautomatik aktiv";
         Prefs.note(this, "Anruf geprüft: " + reason);

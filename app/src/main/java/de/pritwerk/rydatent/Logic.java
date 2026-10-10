@@ -12,21 +12,42 @@ public final class Logic {
         return false;
     }
 
-    public static boolean shouldRejectCall(boolean enabled, boolean connected) {
-        return enabled && connected;
+    public static boolean shouldRejectCall(boolean runtimeEnabled,
+                                           boolean enabled,
+                                           boolean connected) {
+        return runtimeEnabled && enabled && connected;
     }
 
     public static boolean smsCooldownElapsed(long previous, long now) {
         return previous == 0L || now - previous >= 600_000L;
     }
 
-    public static boolean shouldWatchBlitzer(boolean enabled, boolean connected) {
-        return enabled && connected;
+    public static boolean shouldWatchBlitzer(boolean runtimeEnabled,
+                                             boolean enabled,
+                                             boolean connected) {
+        return runtimeEnabled && enabled && connected;
     }
 
-    public static boolean shouldRestartMissingNotification(boolean enabled,
-            boolean connected, boolean notificationPresent, long nowElapsed, long retryAfterElapsed) {
-        return shouldWatchBlitzer(enabled, connected)
-                && !notificationPresent && nowElapsed >= retryAfterElapsed;
+    public static boolean shouldRunDriveService(boolean runtimeEnabled,
+                                                boolean blitzerEnabled,
+                                                boolean blitzerConnected,
+                                                boolean callEnabled,
+                                                boolean callConnected) {
+        return shouldWatchBlitzer(
+                runtimeEnabled, blitzerEnabled, blitzerConnected)
+                || shouldRejectCall(
+                runtimeEnabled, callEnabled, callConnected);
+    }
+
+    public static boolean shouldRestartMissingNotification(
+            boolean runtimeEnabled,
+            boolean enabled,
+            boolean connected,
+            boolean notificationPresent,
+            long nowElapsed,
+            long retryAfterElapsed) {
+        return shouldWatchBlitzer(runtimeEnabled, enabled, connected)
+                && !notificationPresent
+                && nowElapsed >= retryAfterElapsed;
     }
 }

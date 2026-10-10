@@ -15,8 +15,8 @@ public class BtReceiver extends BroadcastReceiver {
   Prefs.state(c,d.getAddress(),connected);
   boolean now=Prefs.connected(c,"blitzer");
   Prefs.note(c,(connected?"Verbunden: ":"Getrennt: ")+d.getName());
-  if(Prefs.get(c).getBoolean("blitzer_enabled",false) && previous!=now) Blitzer.command(c,now);
-  // Keep the 15-second watcher aligned with the selected Bluetooth state.
+  if(Prefs.runtimeEnabled(c) && Prefs.get(c).getBoolean("blitzer_enabled",false) && previous!=now) Blitzer.command(c,now);
+  // Keep the Fahrmodus service aligned with all selected Bluetooth states.
   BlitzerWatchService.sync(c);
  }
 }

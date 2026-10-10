@@ -19,16 +19,22 @@ import android.widget.*;
 import java.util.*;
 public class MainActivity extends Activity {
  LinearLayout layout;
- @Override protected void onCreate(Bundle b){super.onCreate(b); Prefs.get(this).edit().remove("test_number").apply();}
+ @Override protected void onCreate(Bundle b){
+  super.onCreate(b);
+  Prefs.get(this).edit().remove("test_number").apply();
+  boolean wasRuntime=Prefs.runtimeEnabled(this);
+  Prefs.setRuntimeEnabled(this,true);
+  if(!wasRuntime && Prefs.get(this).getBoolean("blitzer_enabled",false) && Prefs.connected(this,"blitzer")) Blitzer.command(this,true);
+ }
  @Override protected void onResume(){super.onResume(); BlitzerWatchService.sync(this); draw();}
  private void title(String t){TextView v=new TextView(this);v.setText(t);v.setTextSize(17);v.setPadding(12,18,12,8);layout.addView(v);}
  private void button(String t,Runnable r){Button b=new Button(this);b.setText(t);layout.addView(b);b.setOnClickListener(v->r.run());}
  private void checkbox(String label, String key){CheckBox c=new CheckBox(this); c.setText(label);c.setChecked(Prefs.get(this).getBoolean(key,false));layout.addView(c);c.setOnCheckedChangeListener((x,v)->{
   Prefs.get(this).edit().putBoolean(key,v).apply();
-  if("blitzer_enabled".equals(key)) BlitzerWatchService.sync(this);
+  if("blitzer_enabled".equals(key) || "reply_enabled".equals(key)) BlitzerWatchService.sync(this);
  });}
  private void draw(){ScrollView sc=new ScrollView(this);layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);layout.setPadding(18,12,18,12);sc.addView(layout);setContentView(sc);
- title("Rydatent 0.1.0-dev.5 – Entwicklungskandidat");
+ title("Rydatent 0.1.0-dev.6 – Entwicklungskandidat");
  title("1. Berechtigungen");button("Bluetooth / Kontakte / SMS-Versand anfordern",()->requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.READ_CONTACTS,Manifest.permission.SEND_SMS},10));
  button("Anruffilter-Rolle anfordern",()->{RoleManager rm=getSystemService(RoleManager.class);if(rm!=null && rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING))Toast.makeText(this,"Anruffilter bereits aktiv",Toast.LENGTH_SHORT).show();else if(rm!=null && rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING))startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING),22);else Toast.makeText(this,"Rolle nicht verfügbar",Toast.LENGTH_LONG).show();});
  // Android restriction indicators; neither guarantees scheduling.
@@ -44,6 +50,8 @@ public class MainActivity extends Activity {
   try { startActivity(i); }
   catch (RuntimeException e) { Toast.makeText(this,"App-Einstellungen nicht verfügbar",Toast.LENGTH_LONG).show(); }
  });
+ checkbox("Nach Geräteneustart automatisch aktivieren", "auto_start");
+ title("Autostart wirkt beim nächsten Geräteneustart. Öffnen von Rydatent aktiviert die Automatik immer für die aktuelle Sitzung.");
  title("2. Gekoppelte Bluetooth-Geräte");
  if(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED){title("Bitte zuerst Bluetooth-Berechtigung erteilen.");}
  else { BluetoothManager bm=getSystemService(BluetoothManager.class);BluetoothAdapter a=bm==null?null:bm.getAdapter();Set<BluetoothDevice> paired=a==null?Set.of():a.getBondedDevices();
@@ -69,13 +77,21 @@ public class MainActivity extends Activity {
  NotificationManager nm=getSystemService(NotificationManager.class);
  boolean access=nm!=null && nm.isNotificationListenerAccessGranted(new ComponentName(this,BlitzerListener.class));
  title("Blitzer-Wache / Benachrichtigungszugriff: "+(access?"freigegeben":"nicht freigegeben"));
- title("Fahrmodus-Dienst: "+(BlitzerWatchService.running()?"aktiv":"nicht aktiv"));
+ boolean serviceWanted=Logic.shouldRunDriveService(
+  Prefs.runtimeEnabled(this),
+  Prefs.get(this).getBoolean("blitzer_enabled",false),
+  Prefs.connected(this,"blitzer"),
+  Prefs.get(this).getBoolean("reply_enabled",false),
+  Prefs.connected(this,"sms"));
+ title("Automatik-Laufzeit: "+(Prefs.runtimeEnabled(this)?"aktiv":"inaktiv"));
+ title("Fahrmodus-Dienst: "+ServiceState.label(this,serviceWanted));
+ title("Dienst-Watchdog: Heartbeat alle 15 Sekunden; reagiert er länger als 45 Sekunden nicht, gilt der Dienst als ausgefallen.");
  button("Anzeige aktualisieren",this::draw);
  title("6. Diagnoseprotokoll (neueste zuerst)");
  title(Prefs.get(this).getString("event_history","Noch keine Ereignisse"));
  button("Protokoll loeschen",()->{Prefs.clearHistory(this);draw();});
  }
  private void choice(String label,String type,String addr){CheckBox c=new CheckBox(this);c.setText(label);c.setChecked(Prefs.chosen(this,type).contains(addr));layout.addView(c);c.setOnCheckedChangeListener((b,yes)->{Set<String> s=Prefs.chosen(this,type);if(yes)s.add(addr);else s.remove(addr);Prefs.get(this).edit().putStringSet("choose_"+type,s).apply();
-  if("blitzer".equals(type)) BlitzerWatchService.sync(this);
+  if("blitzer".equals(type) || "sms".equals(type)) BlitzerWatchService.sync(this);
  });}
 }

@@ -25,6 +25,18 @@ final class Prefs {
         return Logic.shouldRun(active(c), chosen(c, type));
     }
 
+    static boolean runtimeEnabled(Context c) {
+        return get(c).getBoolean("runtime_enabled", true);
+    }
+
+    static void setRuntimeEnabled(Context c, boolean enabled) {
+        get(c).edit().putBoolean("runtime_enabled", enabled).commit();
+    }
+
+    static void clearActive(Context c) {
+        get(c).edit().remove("connected").commit();
+    }
+
     // Synchronisiert: Bluetooth-, Telefon- und Benachrichtigungsereignisse koennen
     // kurz hintereinander eintreffen. Es werden maximal 30 Statuszeilen gehalten.
     static synchronized void note(Context c, String message) {
