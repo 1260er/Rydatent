@@ -5,6 +5,7 @@
         <item name="android:windowBackground">@drawable/bg_app</item>
         <item name="android:textColorPrimary">@color/ui_text_primary</item>
         <item name="android:textColorSecondary">@color/ui_text_secondary</item>
+        <item name="android:colorAccent">@color/ui_control_accent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>

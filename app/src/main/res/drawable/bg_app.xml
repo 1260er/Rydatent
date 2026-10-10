@@ -1,46 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="#FFF7F8FB"
-                android:centerColor="#FFF2F4F8"
-                android:endColor="#FFECEFF4" />
-        </shape>
-    </item>
-
-    <item
-        android:gravity="top|end"
-        android:right="-36dp"
-        android:top="-28dp">
-        <shape android:shape="oval">
-            <size android:width="280dp" android:height="280dp" />
-            <solid android:color="#22FF8A00" />
-        </shape>
-    </item>
-
-    <item
-        android:gravity="bottom|start"
-        android:left="-48dp"
-        android:bottom="-42dp">
-        <shape android:shape="oval">
-            <size android:width="320dp" android:height="320dp" />
-            <solid android:color="#16FF8A00" />
-        </shape>
-    </item>
-
-    <item
-        android:gravity="center_horizontal|top"
-        android:top="118dp">
-        <shape android:shape="rectangle">
-            <size android:width="760dp" android:height="220dp" />
-            <corners android:radius="110dp" />
-            <gradient
-                android:angle="0"
-                android:startColor="#10FFFFFF"
-                android:centerColor="#18FF8A00"
-                android:endColor="#10FFFFFF" />
-        </shape>
-    </item>
-</layer-list>
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/bg_app_light"
+    android:gravity="fill" />
