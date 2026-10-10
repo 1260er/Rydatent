@@ -15,7 +15,7 @@
         android:fillColor="#00000000"
         android:pathData="M24,83 C30,65 42,50 59,41"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="4.0"
+        android:strokeWidth="2.0"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
@@ -24,7 +24,7 @@
         android:fillColor="#00000000"
         android:pathData="M64,84 C57,68 58,53 68,41"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="4.0"
+        android:strokeWidth="2.0"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
@@ -33,21 +33,21 @@
         android:fillColor="#00000000"
         android:pathData="M44,79 L47,69"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="3.4"
+        android:strokeWidth="1.7"
         android:strokeLineCap="butt" />
 
     <path
         android:fillColor="#00000000"
         android:pathData="M48,64 L51,57"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="3.1"
+        android:strokeWidth="1.55"
         android:strokeLineCap="butt" />
 
     <path
         android:fillColor="#00000000"
         android:pathData="M52,52 L55,47"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="2.8"
+        android:strokeWidth="1.4"
         android:strokeLineCap="butt" />
 
     <!-- Blitzer-Schild -->
