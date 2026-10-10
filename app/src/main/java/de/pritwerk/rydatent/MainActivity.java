@@ -1,4 +1,5 @@
 package de.pritwerk.rydatent;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -7,91 +8,677 @@ import android.app.role.RoleManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.content.Intent;
 import android.content.ComponentName;
-import android.provider.Settings;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.net.Uri;
+import android.provider.Settings;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.*;
-import java.util.*;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.PopupMenu;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.Set;
+
 public class MainActivity extends Activity {
- LinearLayout layout;
- @Override protected void onCreate(Bundle b){
-  super.onCreate(b);
-  Prefs.get(this).edit().remove("test_number").apply();
-  boolean wasRuntime=Prefs.runtimeEnabled(this);
-  Prefs.setRuntimeEnabled(this,true);
-  if(!wasRuntime && Prefs.get(this).getBoolean("blitzer_enabled",false) && Prefs.connected(this,"blitzer")) Blitzer.command(this,true);
- }
- @Override protected void onResume(){super.onResume(); BlitzerWatchService.sync(this); draw();}
- private void title(String t){TextView v=new TextView(this);v.setText(t);v.setTextSize(17);v.setPadding(12,18,12,8);layout.addView(v);}
- private void button(String t,Runnable r){Button b=new Button(this);b.setText(t);layout.addView(b);b.setOnClickListener(v->r.run());}
- private void checkbox(String label, String key){CheckBox c=new CheckBox(this); c.setText(label);c.setChecked(Prefs.get(this).getBoolean(key,false));layout.addView(c);c.setOnCheckedChangeListener((x,v)->{
-  Prefs.get(this).edit().putBoolean(key,v).apply();
-  if("blitzer_enabled".equals(key) || "reply_enabled".equals(key)) BlitzerWatchService.sync(this);
- });}
- private void draw(){ScrollView sc=new ScrollView(this);layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);layout.setPadding(18,12,18,12);sc.addView(layout);setContentView(sc);
- title("Rydatent 0.1.0-dev.6 – Entwicklungskandidat");
- title("1. Berechtigungen");button("Bluetooth / Kontakte / SMS-Versand anfordern",()->requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.READ_CONTACTS,Manifest.permission.SEND_SMS},10));
- button("Anruffilter-Rolle anfordern",()->{RoleManager rm=getSystemService(RoleManager.class);if(rm!=null && rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING))Toast.makeText(this,"Anruffilter bereits aktiv",Toast.LENGTH_SHORT).show();else if(rm!=null && rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING))startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING),22);else Toast.makeText(this,"Rolle nicht verfügbar",Toast.LENGTH_LONG).show();});
- // Android restriction indicators; neither guarantees scheduling.
- ActivityManager am=getSystemService(ActivityManager.class);
- PowerManager pm=getSystemService(PowerManager.class);
- boolean restricted=am!=null && am.isBackgroundRestricted();
- boolean exempt=pm!=null && pm.isIgnoringBatteryOptimizations(getPackageName());
- title("Hintergrundausführung: "+(am==null?"unbekannt":restricted?"EINGESCHRÄNKT":"nicht eingeschränkt"));
- title("Akkuoptimierung: "+(pm==null?"unbekannt":exempt?"ausgenommen":"nicht ausgenommen"));
- title("Für den Fahrmodus Hintergrundnutzung erlauben und Akku auf Uneingeschränkt setzen.");
- button("Rydatent-App-Info / Akku-Einstellungen öffnen",()->{
-  Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",getPackageName(),null));
-  try { startActivity(i); }
-  catch (RuntimeException e) { Toast.makeText(this,"App-Einstellungen nicht verfügbar",Toast.LENGTH_LONG).show(); }
- });
- checkbox("Nach Geräteneustart automatisch aktivieren", "auto_start");
- title("Autostart wirkt beim nächsten Geräteneustart. Öffnen von Rydatent aktiviert die Automatik immer für die aktuelle Sitzung.");
- title("2. Gekoppelte Bluetooth-Geräte");
- if(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED){title("Bitte zuerst Bluetooth-Berechtigung erteilen.");}
- else { BluetoothManager bm=getSystemService(BluetoothManager.class);BluetoothAdapter a=bm==null?null:bm.getAdapter();Set<BluetoothDevice> paired=a==null?Set.of():a.getBondedDevices();
- if(paired.isEmpty())title("Keine gekoppelten Geräte erkannt.");
- for(BluetoothDevice d:paired){String addr=d.getAddress();title(d.getName()+" ("+addr+")");choice("Blitzer.de", "blitzer",addr);choice("Anruf-Automatik", "sms",addr);}
- }
- title("3. Blitzer.de");checkbox("Bluetooth-Automatik aktivieren", "blitzer_enabled");button("Start-Intent manuell testen",()->{Blitzer.command(this,true);draw();});button("Stop-Intent manuell testen",()->{Blitzer.command(this,false);draw();});
- title("Fahrmodus: prueft bei verbundenem ausgewaehltem Bluetooth alle 15 Sekunden die Blitzer.de-Benachrichtigung.");
- button("Benachrichtigungszugriff erteilen",()->startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));
- button("Fahrmodus-Benachrichtigung erlauben",()->requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},11));
- title("4. Anruf-Automatik");
- checkbox("Anrufabweisung und automatische SMS aktivieren", "reply_enabled");
- title("Bei ausgewähltem Bluetooth-Gerät wird jeder eingehende Anruf abgewiesen. Für Anrufe mit Rufnummer wird höchstens einmal je Nummer innerhalb von 10 Minuten eine SMS gesendet. Unterdrückte Rufnummern können abgewiesen, aber nicht per SMS beantwortet werden. SIM-Auswahl noch nicht implementiert.");
- title("5. Status");title(Prefs.get(this).getString("last","Noch kein Ereignis"));
- title("Bluetooth-Berechtigung: "+(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)==PackageManager.PERMISSION_GRANTED?"erteilt":"FEHLT"));
- title("Kontakte für Anruffilter: "+(checkSelfPermission(Manifest.permission.READ_CONTACTS)==PackageManager.PERMISSION_GRANTED?"erteilt":"FEHLT"));
- title("SMS-Versand: "+(checkSelfPermission(Manifest.permission.SEND_SMS)==PackageManager.PERMISSION_GRANTED?"erteilt":"FEHLT"));
- title("Fahrmodus-Benachrichtigung: "+(checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)==PackageManager.PERMISSION_GRANTED?"erteilt":"FEHLT"));
- RoleManager role=getSystemService(RoleManager.class);
- title("Anruffilter: "+(role!=null && role.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)?"aktiv":"nicht aktiv"));
- title("Anruf-Bluetooth verbunden: "+(Prefs.connected(this,"sms")?"ja":"nein"));
- title("Blitzer-Bluetooth verbunden: "+(Prefs.connected(this,"blitzer")?"ja":"nein"));
- NotificationManager nm=getSystemService(NotificationManager.class);
- boolean access=nm!=null && nm.isNotificationListenerAccessGranted(new ComponentName(this,BlitzerListener.class));
- title("Blitzer-Wache / Benachrichtigungszugriff: "+(access?"freigegeben":"nicht freigegeben"));
- boolean serviceWanted=Logic.shouldRunDriveService(
-  Prefs.runtimeEnabled(this),
-  Prefs.get(this).getBoolean("blitzer_enabled",false),
-  Prefs.connected(this,"blitzer"),
-  Prefs.get(this).getBoolean("reply_enabled",false),
-  Prefs.connected(this,"sms"));
- title("Automatik-Laufzeit: "+(Prefs.runtimeEnabled(this)?"aktiv":"inaktiv"));
- title("Fahrmodus-Dienst: "+ServiceState.label(this,serviceWanted));
- title("Dienst-Watchdog: Heartbeat alle 15 Sekunden; reagiert er länger als 45 Sekunden nicht, gilt der Dienst als ausgefallen.");
- button("Anzeige aktualisieren",this::draw);
- title("6. Diagnoseprotokoll (neueste zuerst)");
- title(Prefs.get(this).getString("event_history","Noch keine Ereignisse"));
- button("Protokoll loeschen",()->{Prefs.clearHistory(this);draw();});
- }
- private void choice(String label,String type,String addr){CheckBox c=new CheckBox(this);c.setText(label);c.setChecked(Prefs.chosen(this,type).contains(addr));layout.addView(c);c.setOnCheckedChangeListener((b,yes)->{Set<String> s=Prefs.chosen(this,type);if(yes)s.add(addr);else s.remove(addr);Prefs.get(this).edit().putStringSet("choose_"+type,s).apply();
-  if("blitzer".equals(type) || "sms".equals(type)) BlitzerWatchService.sync(this);
- });}
+    private enum Page { HOME, DEVICES, AUTOMATIONS, PERMISSIONS, DIAGNOSTICS, ABOUT }
+
+    private Page currentPage = Page.HOME;
+    private LinearLayout content;
+    private TextView pageTitle;
+
+    @Override
+    protected void onCreate(Bundle state) {
+        super.onCreate(state);
+        Prefs.get(this).edit().remove("test_number").apply();
+
+        boolean wasRuntime = Prefs.runtimeEnabled(this);
+        Prefs.setRuntimeEnabled(this, true);
+
+        if (!wasRuntime
+                && Prefs.get(this).getBoolean("blitzer_enabled", false)
+                && Prefs.connected(this, "blitzer")) {
+            Blitzer.command(this, true);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        BlitzerWatchService.sync(this);
+        draw();
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private int color(int resource) {
+        return getColor(resource);
+    }
+
+    private void draw() {
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(16), dp(20), dp(16));
+        root.setBackgroundResource(R.drawable.bg_app);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+
+        pageTitle = new TextView(this);
+        pageTitle.setTextSize(24);
+        pageTitle.setTextColor(color(R.color.ui_text_primary));
+        pageTitle.setTypeface(pageTitle.getTypeface(), android.graphics.Typeface.BOLD);
+        header.addView(
+                pageTitle,
+                new LinearLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        1f));
+
+        ImageButton menu = new ImageButton(this);
+        menu.setImageResource(R.drawable.ic_menu);
+        menu.setBackgroundResource(android.R.drawable.list_selector_background);
+        menu.setContentDescription(getString(R.string.action_open_menu));
+        header.addView(menu, new LinearLayout.LayoutParams(dp(48), dp(48)));
+        menu.setOnClickListener(this::showMenu);
+
+        root.addView(header);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+
+        content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(0, dp(16), 0, dp(24));
+        scroll.addView(content);
+
+        root.addView(
+                scroll,
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        0,
+                        1f));
+
+        setContentView(root);
+        renderCurrentPage();
+    }
+
+    private void showMenu(View anchor) {
+        PopupMenu menu = new PopupMenu(this, anchor);
+        menu.getMenu().add(0, 1, 0, R.string.page_home);
+        menu.getMenu().add(0, 2, 1, R.string.page_devices);
+        menu.getMenu().add(0, 3, 2, R.string.page_automations);
+        menu.getMenu().add(0, 4, 3, R.string.page_permissions);
+        menu.getMenu().add(0, 5, 4, R.string.page_diagnostics);
+        menu.getMenu().add(0, 6, 5, R.string.page_about);
+
+        menu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case 2:
+                    currentPage = Page.DEVICES;
+                    break;
+                case 3:
+                    currentPage = Page.AUTOMATIONS;
+                    break;
+                case 4:
+                    currentPage = Page.PERMISSIONS;
+                    break;
+                case 5:
+                    currentPage = Page.DIAGNOSTICS;
+                    break;
+                case 6:
+                    currentPage = Page.ABOUT;
+                    break;
+                case 1:
+                default:
+                    currentPage = Page.HOME;
+                    break;
+            }
+            renderCurrentPage();
+            return true;
+        });
+
+        menu.show();
+    }
+
+    private void renderCurrentPage() {
+        content.removeAllViews();
+
+        switch (currentPage) {
+            case DEVICES:
+                pageTitle.setText(R.string.page_devices);
+                renderDevices();
+                break;
+            case AUTOMATIONS:
+                pageTitle.setText(R.string.page_automations);
+                renderAutomations();
+                break;
+            case PERMISSIONS:
+                pageTitle.setText(R.string.page_permissions);
+                renderPermissions();
+                break;
+            case DIAGNOSTICS:
+                pageTitle.setText(R.string.page_diagnostics);
+                renderDiagnostics();
+                break;
+            case ABOUT:
+                pageTitle.setText(R.string.page_about);
+                renderAbout();
+                break;
+            case HOME:
+            default:
+                pageTitle.setText(R.string.app_name);
+                renderHome();
+                break;
+        }
+    }
+
+    private LinearLayout card() {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(16), dp(14), dp(16), dp(14));
+        card.setBackgroundResource(R.drawable.card_background);
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.bottomMargin = dp(12);
+
+        content.addView(card, params);
+        return card;
+    }
+
+    private TextView sectionTitle(LinearLayout parent, int textResource) {
+        TextView view = new TextView(this);
+        view.setText(textResource);
+        view.setTextSize(18);
+        view.setTextColor(color(R.color.ui_text_primary));
+        view.setTypeface(view.getTypeface(), android.graphics.Typeface.BOLD);
+        view.setPadding(0, 0, 0, dp(8));
+        parent.addView(view);
+        return view;
+    }
+
+    private TextView body(LinearLayout parent, CharSequence text) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        view.setTextSize(16);
+        view.setTextColor(color(R.color.ui_text_primary));
+        view.setLineSpacing(0f, 1.08f);
+        parent.addView(view);
+        return view;
+    }
+
+    private TextView secondary(LinearLayout parent, CharSequence text) {
+        TextView view = body(parent, text);
+        view.setTextColor(color(R.color.ui_text_secondary));
+        return view;
+    }
+
+    private Button action(LinearLayout parent, int textResource, Runnable action) {
+        Button button = new Button(this);
+        button.setText(textResource);
+        button.setAllCaps(false);
+        button.setTextSize(16);
+        button.setTextColor(color(R.color.ui_text_primary));
+        button.setBackgroundResource(R.drawable.button_background);
+        button.setMinHeight(dp(52));
+        button.setPadding(dp(14), dp(8), dp(14), dp(8));
+
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = dp(8);
+
+        parent.addView(button, params);
+        button.setOnClickListener(view -> action.run());
+        return button;
+    }
+
+    private CheckBox checkbox(LinearLayout parent, int textResource, String key) {
+        CheckBox checkbox = new CheckBox(this);
+        checkbox.setText(textResource);
+        checkbox.setTextSize(16);
+        checkbox.setTextColor(color(R.color.ui_text_primary));
+        checkbox.setPadding(0, dp(4), 0, dp(4));
+        checkbox.setChecked(Prefs.get(this).getBoolean(key, false));
+        parent.addView(checkbox);
+
+        checkbox.setOnCheckedChangeListener((button, checked) -> {
+            Prefs.get(this).edit().putBoolean(key, checked).apply();
+
+            if ("blitzer_enabled".equals(key) || "reply_enabled".equals(key)) {
+                BlitzerWatchService.sync(this);
+            }
+        });
+
+        return checkbox;
+    }
+
+    private void renderHome() {
+        LinearLayout intro = card();
+        secondary(intro, getString(R.string.home_intro));
+
+        LinearLayout controls = card();
+        sectionTitle(controls, R.string.home_quick_controls);
+        checkbox(controls, R.string.automation_blitzer, "blitzer_enabled");
+        checkbox(controls, R.string.automation_calls, "reply_enabled");
+
+        action(controls, R.string.action_open_devices, () -> {
+            currentPage = Page.DEVICES;
+            renderCurrentPage();
+        });
+
+        action(controls, R.string.action_open_automations, () -> {
+            currentPage = Page.AUTOMATIONS;
+            renderCurrentPage();
+        });
+
+        LinearLayout status = card();
+        sectionTitle(status, R.string.home_status);
+
+        boolean serviceWanted = driveServiceWanted();
+
+        body(
+                status,
+                getString(
+                        R.string.status_runtime,
+                        getString(
+                                Prefs.runtimeEnabled(this)
+                                        ? R.string.state_active
+                                        : R.string.state_inactive)));
+
+        body(
+                status,
+                getString(
+                        R.string.status_service,
+                        ServiceState.label(this, serviceWanted)));
+
+        body(
+                status,
+                getString(
+                        R.string.status_blitzer_bt,
+                        getString(
+                                Prefs.connected(this, "blitzer")
+                                        ? R.string.state_connected
+                                        : R.string.state_disconnected)));
+
+        body(
+                status,
+                getString(
+                        R.string.status_call_bt,
+                        getString(
+                                Prefs.connected(this, "sms")
+                                        ? R.string.state_connected
+                                        : R.string.state_disconnected)));
+
+        secondary(status, getString(R.string.status_watchdog));
+
+        action(status, R.string.action_refresh, this::renderCurrentPage);
+        action(status, R.string.action_open_permissions, () -> {
+            currentPage = Page.PERMISSIONS;
+            renderCurrentPage();
+        });
+    }
+
+    private void renderDevices() {
+        LinearLayout intro = card();
+        secondary(intro, getString(R.string.devices_intro));
+
+        if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                != PackageManager.PERMISSION_GRANTED) {
+            LinearLayout missing = card();
+            secondary(missing, getString(R.string.devices_permission_missing));
+            action(
+                    missing,
+                    R.string.permission_request_runtime,
+                    this::requestRuntimePermissions);
+            return;
+        }
+
+        BluetoothManager manager = getSystemService(BluetoothManager.class);
+        BluetoothAdapter adapter = manager == null ? null : manager.getAdapter();
+        Set<BluetoothDevice> devices =
+                adapter == null ? Set.of() : adapter.getBondedDevices();
+
+        if (devices.isEmpty()) {
+            LinearLayout empty = card();
+            secondary(empty, getString(R.string.devices_none));
+            return;
+        }
+
+        for (BluetoothDevice device : devices) {
+            LinearLayout deviceCard = card();
+            String name = device.getName();
+
+            if (name == null || name.isBlank()) {
+                name = device.getAddress();
+            }
+
+            TextView deviceTitle = body(deviceCard, name);
+            deviceTitle.setTypeface(
+                    deviceTitle.getTypeface(),
+                    android.graphics.Typeface.BOLD);
+
+            secondary(deviceCard, device.getAddress());
+
+            deviceChoice(
+                    deviceCard,
+                    R.string.device_blitzer,
+                    "blitzer",
+                    device.getAddress());
+
+            deviceChoice(
+                    deviceCard,
+                    R.string.device_calls,
+                    "sms",
+                    device.getAddress());
+        }
+    }
+
+    private void deviceChoice(
+            LinearLayout parent,
+            int labelResource,
+            String type,
+            String address) {
+
+        CheckBox checkbox = new CheckBox(this);
+        checkbox.setText(labelResource);
+        checkbox.setTextSize(16);
+        checkbox.setTextColor(color(R.color.ui_text_primary));
+        checkbox.setChecked(Prefs.chosen(this, type).contains(address));
+        parent.addView(checkbox);
+
+        checkbox.setOnCheckedChangeListener((button, checked) -> {
+            Set<String> selected = Prefs.chosen(this, type);
+
+            if (checked) {
+                selected.add(address);
+            } else {
+                selected.remove(address);
+            }
+
+            Prefs.get(this)
+                    .edit()
+                    .putStringSet("choose_" + type, selected)
+                    .apply();
+
+            BlitzerWatchService.sync(this);
+        });
+    }
+
+    private void renderAutomations() {
+        LinearLayout blitzer = card();
+        sectionTitle(blitzer, R.string.device_blitzer);
+        checkbox(blitzer, R.string.automation_blitzer, "blitzer_enabled");
+        secondary(blitzer, getString(R.string.automation_blitzer_hint));
+        action(
+                blitzer,
+                R.string.action_start_blitzer,
+                () -> Blitzer.command(this, true));
+        action(
+                blitzer,
+                R.string.action_stop_blitzer,
+                () -> Blitzer.command(this, false));
+
+        LinearLayout calls = card();
+        sectionTitle(calls, R.string.device_calls);
+        checkbox(calls, R.string.automation_calls, "reply_enabled");
+        secondary(calls, getString(R.string.automation_calls_hint));
+
+        LinearLayout startup = card();
+        sectionTitle(startup, R.string.automation_autostart);
+        checkbox(startup, R.string.automation_autostart, "auto_start");
+        secondary(startup, getString(R.string.automation_autostart_hint));
+    }
+
+    private void renderPermissions() {
+        LinearLayout runtime = card();
+        sectionTitle(runtime, R.string.permission_runtime_title);
+
+        permissionStatus(
+                runtime,
+                R.string.permission_bluetooth,
+                checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                        == PackageManager.PERMISSION_GRANTED);
+
+        permissionStatus(
+                runtime,
+                R.string.permission_contacts,
+                checkSelfPermission(Manifest.permission.READ_CONTACTS)
+                        == PackageManager.PERMISSION_GRANTED);
+
+        permissionStatus(
+                runtime,
+                R.string.permission_sms,
+                checkSelfPermission(Manifest.permission.SEND_SMS)
+                        == PackageManager.PERMISSION_GRANTED);
+
+        permissionStatus(
+                runtime,
+                R.string.permission_notifications,
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                        == PackageManager.PERMISSION_GRANTED);
+
+        action(
+                runtime,
+                R.string.permission_request_runtime,
+                this::requestRuntimePermissions);
+
+        action(
+                runtime,
+                R.string.permission_notification_post,
+                () -> requestPermissions(
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        11));
+
+        LinearLayout special = card();
+
+        RoleManager role = getSystemService(RoleManager.class);
+        boolean callRole =
+                role != null
+                        && role.isRoleHeld(RoleManager.ROLE_CALL_SCREENING);
+
+        permissionStatus(
+                special,
+                R.string.permission_call_screening,
+                callRole);
+
+        NotificationManager notificationManager =
+                getSystemService(NotificationManager.class);
+
+        boolean listenerAccess =
+                notificationManager != null
+                        && notificationManager.isNotificationListenerAccessGranted(
+                                new ComponentName(this, BlitzerListener.class));
+
+        permissionStatus(
+                special,
+                R.string.permission_notification_listener,
+                listenerAccess);
+
+        action(
+                special,
+                R.string.permission_call_role,
+                this::requestCallRole);
+
+        action(
+                special,
+                R.string.permission_notification_access,
+                () -> startActivity(
+                        new Intent(
+                                Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)));
+
+        LinearLayout system = card();
+
+        ActivityManager activityManager =
+                getSystemService(ActivityManager.class);
+        PowerManager powerManager =
+                getSystemService(PowerManager.class);
+
+        boolean restricted =
+                activityManager != null
+                        && activityManager.isBackgroundRestricted();
+
+        boolean exempt =
+                powerManager != null
+                        && powerManager.isIgnoringBatteryOptimizations(
+                                getPackageName());
+
+        body(
+                system,
+                getString(
+                        R.string.status_line,
+                        getString(R.string.permission_background),
+                        getString(
+                                activityManager == null
+                                        ? R.string.state_unknown
+                                        : restricted
+                                        ? R.string.state_restricted
+                                        : R.string.state_unrestricted)));
+
+        body(
+                system,
+                getString(
+                        R.string.status_line,
+                        getString(R.string.permission_battery),
+                        getString(
+                                powerManager == null
+                                        ? R.string.state_unknown
+                                        : exempt
+                                        ? R.string.state_exempt
+                                        : R.string.state_optimized)));
+
+        action(
+                system,
+                R.string.permission_app_settings,
+                this::openAppSettings);
+    }
+
+    private void permissionStatus(
+            LinearLayout parent,
+            int label,
+            boolean granted) {
+
+        body(
+                parent,
+                getString(
+                        R.string.status_line,
+                        getString(label),
+                        getString(
+                                granted
+                                        ? R.string.state_granted
+                                        : R.string.state_missing)));
+    }
+
+    private void renderDiagnostics() {
+        LinearLayout logCard = card();
+        secondary(logCard, getString(R.string.diagnostics_intro));
+
+        String history =
+                Prefs.get(this).getString("event_history", "");
+
+        body(
+                logCard,
+                history.isBlank()
+                        ? getString(R.string.diagnostics_empty)
+                        : history);
+
+        action(logCard, R.string.action_clear_log, () -> {
+            Prefs.clearHistory(this);
+            renderCurrentPage();
+        });
+    }
+
+    private void renderAbout() {
+        LinearLayout about = card();
+        sectionTitle(about, R.string.about_title);
+        body(about, getString(R.string.about_version, "0.1.0-dev.7"));
+        secondary(about, getString(R.string.about_text));
+
+        LinearLayout privacy = card();
+        secondary(privacy, getString(R.string.about_privacy));
+    }
+
+    private void requestRuntimePermissions() {
+        requestPermissions(
+                new String[]{
+                        Manifest.permission.BLUETOOTH_CONNECT,
+                        Manifest.permission.READ_CONTACTS,
+                        Manifest.permission.SEND_SMS
+                },
+                10);
+    }
+
+    private void requestCallRole() {
+        RoleManager role = getSystemService(RoleManager.class);
+
+        if (role != null
+                && role.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+            Toast.makeText(
+                    this,
+                    R.string.toast_call_role_active,
+                    Toast.LENGTH_SHORT)
+                    .show();
+            return;
+        }
+
+        if (role != null
+                && role.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
+            startActivityForResult(
+                    role.createRequestRoleIntent(
+                            RoleManager.ROLE_CALL_SCREENING),
+                    22);
+            return;
+        }
+
+        Toast.makeText(
+                this,
+                R.string.toast_call_role_unavailable,
+                Toast.LENGTH_LONG)
+                .show();
+    }
+
+    private void openAppSettings() {
+        Intent intent =
+                new Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts(
+                                "package",
+                                getPackageName(),
+                                null));
+
+        try {
+            startActivity(intent);
+        } catch (RuntimeException exception) {
+            Toast.makeText(
+                    this,
+                    R.string.toast_app_settings_unavailable,
+                    Toast.LENGTH_LONG)
+                    .show();
+        }
+    }
+
+    private boolean driveServiceWanted() {
+        return Logic.shouldRunDriveService(
+                Prefs.runtimeEnabled(this),
+                Prefs.get(this).getBoolean("blitzer_enabled", false),
+                Prefs.connected(this, "blitzer"),
+                Prefs.get(this).getBoolean("reply_enabled", false),
+                Prefs.connected(this, "sms"));
+    }
 }

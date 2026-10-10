@@ -100,7 +100,7 @@ public final class BlitzerWatchService extends Service {
             nm.createNotificationChannel(
                     new NotificationChannel(
                             CHANNEL,
-                            "Rydatent Fahrmodus",
+                            getString(R.string.notification_channel_drive),
                             NotificationManager.IMPORTANCE_LOW));
         }
     }
@@ -129,7 +129,7 @@ public final class BlitzerWatchService extends Service {
                     new Notification.Builder(this, CHANNEL)
                             .setSmallIcon(
                                     android.R.drawable.ic_menu_compass)
-                            .setContentTitle("Fahrmodus aktiv")
+                            .setContentTitle(getString(R.string.notification_drive_active))
                             .setOngoing(true)
                             .setContentIntent(tap)
                             .build();

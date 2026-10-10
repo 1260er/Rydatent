@@ -48,8 +48,8 @@ final class ServiceState {
     }
 
     static String label(Context context, boolean wanted) {
-        if (!wanted) return "nicht aktiv";
-        if (isFresh(context)) return "aktiv und reagiert";
-        return "reagiert nicht";
+        if (!wanted) return context.getString(R.string.state_inactive);
+        if (isFresh(context)) return context.getString(R.string.state_responding);
+        return context.getString(R.string.state_not_responding);
     }
 }
