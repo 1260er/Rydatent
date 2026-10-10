@@ -1,4 +1,4 @@
-# Rydatent – Machbarkeitsprototyp 0.1.0-dev.3
+# Rydatent – Machbarkeitsprototyp 0.1.0-dev.4
 
 Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
 
@@ -41,8 +41,11 @@ Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
 - Die CallScreeningService-Rolle sowie READ_CONTACTS fuer gespeicherte Kontakte
   muessen vorhanden sein. Die bisher getestete Anruf-/SMS-Logik bleibt unveraendert.
 - SMS nutzt die Standard-SIM; SIM-1-Auswahl und echte Zustellbestaetigung fehlen.
-- Die CI erzeugt eine signierte Dev-Debug-APK als Artifact. Ein Prerelease
-  wird weiterhin nach erfolgreicher CI-Pruefung erstellt.
+- dev.4 zeigt Hintergrundbeschraenkung und Akkuoptimierungs-Ausnahme getrennt an.
+  Der Nutzer kann die Android-App-Einstellungen zum Anpassen oeffnen.
+- CI kontrolliert Tests, Lint, Builds und den Dev-Signaturfingerabdruck und
+  veroeffentlicht bei exakt passendem, bereits gepushtem Dev-Tag die APK
+  direkt als GitHub-Prerelease. Kein lokaler APK-Download erforderlich.
 
 ## Reproduzierbarer Test
 1. Dev.3 ueber Obtainium installieren und Blitzer-Wache per

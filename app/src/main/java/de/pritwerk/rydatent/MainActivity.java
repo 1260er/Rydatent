@@ -1,6 +1,7 @@
 package de.pritwerk.rydatent;
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.role.RoleManager;
 import android.bluetooth.BluetoothAdapter;
@@ -11,14 +12,16 @@ import android.content.ComponentName;
 import android.provider.Settings;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.net.Uri;
 import android.text.InputType;
 import android.view.View;
 import android.widget.*;
 import java.util.*;
 public class MainActivity extends Activity {
  LinearLayout layout;
- @Override protected void onCreate(Bundle b){super.onCreate(b); draw();}
- @Override protected void onResume(){super.onResume(); BlitzerWatchService.sync(this);}
+ @Override protected void onCreate(Bundle b){super.onCreate(b);}
+ @Override protected void onResume(){super.onResume(); BlitzerWatchService.sync(this); draw();}
  private void title(String t){TextView v=new TextView(this);v.setText(t);v.setTextSize(17);v.setPadding(12,18,12,8);layout.addView(v);}
  private void button(String t,Runnable r){Button b=new Button(this);b.setText(t);layout.addView(b);b.setOnClickListener(v->r.run());}
  private void checkbox(String label, String key){CheckBox c=new CheckBox(this); c.setText(label);c.setChecked(Prefs.get(this).getBoolean(key,false));layout.addView(c);c.setOnCheckedChangeListener((x,v)->{
@@ -26,9 +29,22 @@ public class MainActivity extends Activity {
   if("blitzer_enabled".equals(key)) BlitzerWatchService.sync(this);
  });}
  private void draw(){ScrollView sc=new ScrollView(this);layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);layout.setPadding(18,12,18,12);sc.addView(layout);setContentView(sc);
- title("Rydatent 0.1.0-dev.3 – Machbarkeitstest");
+ title("Rydatent 0.1.0-dev.4 – Machbarkeitstest");
  title("1. Berechtigungen");button("Bluetooth / Kontakte / SMS-Versand anfordern",()->requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.READ_CONTACTS,Manifest.permission.SEND_SMS},10));
  button("Anruffilter-Rolle anfordern",()->{RoleManager rm=getSystemService(RoleManager.class);if(rm!=null && rm.isRoleHeld(RoleManager.ROLE_CALL_SCREENING))Toast.makeText(this,"Anruffilter bereits aktiv",Toast.LENGTH_SHORT).show();else if(rm!=null && rm.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING))startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING),22);else Toast.makeText(this,"Rolle nicht verfügbar",Toast.LENGTH_LONG).show();});
+ // Android restriction indicators; neither guarantees scheduling.
+ ActivityManager am=getSystemService(ActivityManager.class);
+ PowerManager pm=getSystemService(PowerManager.class);
+ boolean restricted=am!=null && am.isBackgroundRestricted();
+ boolean exempt=pm!=null && pm.isIgnoringBatteryOptimizations(getPackageName());
+ title("Hintergrundausführung: "+(am==null?"unbekannt":restricted?"EINGESCHRÄNKT":"nicht eingeschränkt"));
+ title("Akkuoptimierung: "+(pm==null?"unbekannt":exempt?"ausgenommen":"nicht ausgenommen"));
+ title("Für den Fahrmodus Hintergrundnutzung erlauben und Akku auf Uneingeschränkt setzen.");
+ button("Rydatent-App-Info / Akku-Einstellungen öffnen",()->{
+  Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",getPackageName(),null));
+  try { startActivity(i); }
+  catch (RuntimeException e) { Toast.makeText(this,"App-Einstellungen nicht verfügbar",Toast.LENGTH_LONG).show(); }
+ });
  title("2. Gekoppelte Bluetooth-Geräte");
  if(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)!=PackageManager.PERMISSION_GRANTED){title("Bitte zuerst Bluetooth-Berechtigung erteilen.");}
  else { BluetoothManager bm=getSystemService(BluetoothManager.class);BluetoothAdapter a=bm==null?null:bm.getAdapter();Set<BluetoothDevice> paired=a==null?Set.of():a.getBondedDevices();
