@@ -44,6 +44,7 @@ public class MainActivity extends Activity {
     private Page currentPage = Page.HOME;
     private LinearLayout content;
     private TextView pageTitle;
+    private boolean firstResume = true;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -55,20 +56,36 @@ public class MainActivity extends Activity {
                 .apply();
 
         boolean wasRuntime = Prefs.runtimeEnabled(this);
-        Prefs.setRuntimeEnabled(this, true);
+
+        Prefs.get(this)
+                .edit()
+                .putBoolean("runtime_enabled", true)
+                .apply();
+
+        draw();
 
         if (!wasRuntime
                 && Prefs.get(this).getBoolean("blitzer_enabled", false)
                 && Prefs.connected(this, "blitzer")) {
-            Blitzer.command(this, true);
+            getWindow().getDecorView().postDelayed(
+                    () -> Blitzer.command(this, true),
+                    50L);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        BlitzerWatchService.sync(this);
-        draw();
+
+        if (firstResume) {
+            firstResume = false;
+        } else if (content != null) {
+            renderCurrentPage();
+        }
+
+        getWindow().getDecorView().postDelayed(
+                () -> BlitzerWatchService.sync(this),
+                50L);
     }
 
     private int dp(int value) {
