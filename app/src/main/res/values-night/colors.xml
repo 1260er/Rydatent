@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ui_background">#FF080812</color>
-    <color name="ui_surface">#FF17171F</color>
-    <color name="ui_card_surface">#E617171F</color>
+    <color name="ui_background">#00000000</color>
+    <color name="ui_surface">#CC10131A</color>
+    <color name="ui_card_surface">#D9161A22</color>
     <color name="ui_card_border">#40FFFFFF</color>
     <color name="ui_text_primary">#FFFFFFFF</color>
-    <color name="ui_text_secondary">#FFAAAAAA</color>
-    <color name="ui_accent">#FFFF8A00</color>
-    <color name="ui_accent_soft">#40FF8A00</color>
+    <color name="ui_text_secondary">#D6E2E7EF</color>
+    <color name="ui_button_surface">#D6202631</color>
+    <color name="ui_button_border">#40FFFFFF</color>
     <color name="ui_danger">#FFFFB4AB</color>
 </resources>

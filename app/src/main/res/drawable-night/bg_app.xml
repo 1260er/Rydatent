@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@drawable/bg_app_dark"
-    android:gravity="fill" />
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#FF0F1623"
+                android:centerColor="#FF2E314D"
+                android:endColor="#FF4B2E2C" />
+        </shape>
+    </item>
+
+    <item
+        android:width="180dp"
+        android:height="180dp"
+        android:gravity="top|end"
+        android:top="68dp"
+        android:right="26dp">
+        <shape android:shape="oval">
+            <solid android:color="#26FFD38A" />
+        </shape>
+    </item>
+
+    <item android:drawable="@drawable/scene_road_overlay" />
+</layer-list>

@@ -8,7 +8,9 @@
     <string name="page_diagnostics">Diagnose</string>
     <string name="page_about">Info</string>
     <string name="action_open_menu">Menü öffnen</string>
-    <string name="home_intro">Fahrbegleiter für Bluetooth-gesteuerte Automationen.</string>
+    <string name="home_intro">Fahrbegleiter</string>
+    <string name="home_hero_title">Klar und entspannt fahren.</string>
+    <string name="home_hero_subtitle">Bluetooth-gesteuerter Fahrmodus mit Blitzer.de-Überwachung und automatischer Anrufbehandlung.</string>
     <string name="home_quick_controls">Schnellsteuerung</string>
     <string name="home_status">Status</string>
     <string name="automation_blitzer">Blitzer.de-Automatik</string>
@@ -68,7 +70,7 @@
     <string name="diagnostics_empty">Noch keine Ereignisse aufgezeichnet.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_title">Rydatent</string>
-    <string name="about_text">Rydatent verbindet Bluetooth-gesteuerte Blitzer.de-Überwachung mit der Anrufbehandlung beim Motorradfahren. Dieser Stand bildet den UI-Grundrahmen für die weitere Entwicklung.</string>
+    <string name="about_text">Rydatent verbindet Bluetooth-gesteuerte Blitzer.de-Überwachung mit der Anrufbehandlung beim Motorradfahren. Dieser Stand bildet den Scenic-UI-Grundrahmen für die weitere Entwicklung.</string>
     <string name="about_privacy">Automationszustände und Diagnoseverlauf bleiben lokal in der App. Rydatent verarbeitet keine eingehenden SMS oder Messenger-Nachrichten.</string>
     <string name="toast_call_role_active">Anruffilter ist bereits aktiv.</string>
     <string name="toast_call_role_unavailable">Anruffilter-Rolle ist nicht verfügbar.</string>

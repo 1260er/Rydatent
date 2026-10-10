@@ -1,9 +1,9 @@
-# Rydatent – UI-Grundrahmen 0.1.0-dev.7
+# Rydatent – Scenic UI foundation 0.1.0-dev.8
 
 Kein Stable-Release.
 
-Die technisch getestete Basis bleibt v0.1.0-dev.6. Dev.7 legt darauf den
-UI-Grundrahmen fuer die weitere Entwicklung.
+Dev.8 baut auf dem technisch validierten Stand v0.1.0-dev.7 auf und richtet
+den UI-Grundrahmen neu aus.
 
 ## Technische Basis
 - Bluetooth-Multiwahl fuer Blitzer.de und Anruf-Automatik
@@ -17,26 +17,18 @@ UI-Grundrahmen fuer die weitere Entwicklung.
 - Wiederherstellung nach App-Update
 - lokale Diagnosehistorie
 
-## UI-Grundrahmen
-Das Design orientiert sich an ScaleLauncher und AppStow.
-
-- identischer Light- und Dark-Hintergrund aus ScaleLauncher
-- neutrale Karten- und Oberflaechenstruktur nach AppStow/ScaleLauncher
-- Orange als Rydatent-Akzentfarbe
-- Light- und Dark-Theme
-- Startseite mit Schnellsteuerung und Status
-- getrennte Seiten fuer Geraete, Automationen, Berechtigungen, Diagnose und Info
-- Englisch als Default-Ressourcensprache
-- deutsche Uebersetzung in values-de
-- Android-App-Sprachauswahl ueber locales_config
-- Adaptive Launcher Icon
-- monochromes Android-13+-Icon fuer Material You
-- schwarzer Icon-Hintergrund passend zur bestehenden App-Familie
-- orangefarbenes Rydatent-Symbol
+## Design-Grundrahmen
+- helles Strassen-/Sonnenuntergangs-Theme als App-Hintergrund
+- Bedienoberflaeche wieder neutral, Orange nur im Motiv/Icon
+- Notch / Safe-Area sauber beruecksichtigt
+- adaptive Launcher-Icons mit Material-You-Monochromvariante
+- ueberarbeitete Startseite und Kartenoptik
+- Englisch als Default, Deutsch zusaetzlich
 
 ## Wichtig
-Dev.7 soll die bestehende Automationslogik nicht funktional veraendern.
-Der naechste Schritt ist ausschliesslich UI-Feinschliff und visuelle Abstimmung.
+Dev.8 veraendert nicht bewusst die zugrunde liegende Automationslogik.
+Schwerpunkt dieses Schritts ist der visuelle Rahmen fuer den spaeteren
+UI-Feinschliff.
 
 ## Lokale Qualitaetspruefung
 ./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease

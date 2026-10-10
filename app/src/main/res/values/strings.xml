@@ -8,7 +8,9 @@
     <string name="page_diagnostics">Diagnostics</string>
     <string name="page_about">About</string>
     <string name="action_open_menu">Open menu</string>
-    <string name="home_intro">Driving companion for Bluetooth based automations.</string>
+    <string name="home_intro">Driving companion</string>
+    <string name="home_hero_title">Ride with clarity.</string>
+    <string name="home_hero_subtitle">Bluetooth based drive mode with Blitzer.de monitoring and automatic call handling.</string>
     <string name="home_quick_controls">Quick controls</string>
     <string name="home_status">Status</string>
     <string name="automation_blitzer">Blitzer.de automation</string>
@@ -68,7 +70,7 @@
     <string name="diagnostics_empty">No events recorded yet.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_title">Rydatent</string>
-    <string name="about_text">Rydatent combines Bluetooth triggered Blitzer.de monitoring and motorcycle call handling. This build establishes the user interface foundation for further development.</string>
+    <string name="about_text">Rydatent combines Bluetooth triggered Blitzer.de monitoring and motorcycle call handling. This build establishes the scenic UI foundation for further development.</string>
     <string name="about_privacy">All automation state and diagnostic history remain local to the app. Rydatent does not process incoming SMS or messenger messages.</string>
     <string name="toast_call_role_active">Call screening is already active.</string>
     <string name="toast_call_role_unavailable">Call screening role is not available.</string>
