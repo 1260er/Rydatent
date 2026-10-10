@@ -12,10 +12,8 @@ public final class Logic {
         return false;
     }
 
-    public static boolean shouldReply(String caller, String testNumber,
-                                      boolean enabled, boolean connected) {
-        return enabled && connected && caller != null && !caller.isBlank()
-                && caller.equals(testNumber);
+    public static boolean shouldRejectCall(boolean enabled, boolean connected) {
+        return enabled && connected;
     }
 
     public static boolean smsCooldownElapsed(long previous, long now) {

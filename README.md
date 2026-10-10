@@ -1,10 +1,10 @@
-# Rydatent – Machbarkeitsprototyp 0.1.0-dev.4
+# Rydatent – Entwicklungskandidat 0.1.0-dev.5
 
 Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
 
 ## Funktionsumfang
 - Bluetooth-Multiwahl je Funktion und bekannte Start-/Stopp-Intents fuer Blitzer.de PRO unveraendert.
-- **Blitzer-Wache dev.3:** Bei aktivierter Bluetooth-Automatik und mindestens einer
+- **Blitzer-Wache:** Bei aktivierter Bluetooth-Automatik und mindestens einer
   als verbunden erfassten ausgewählten Bluetooth-Verbindung laeuft ein Android-
   Vordergrunddienst mit sichtbarer Statusbenachrichtigung. Er fragt **alle 15 Sekunden**
   ueber den zuvor freigegebenen NotificationListenerService ab, ob wenigstens eine
@@ -16,16 +16,22 @@ Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
   Dienst ebenfalls angepasst. Die urspruengliche Bluetooth-Start-/Stopp-Logik bleibt.
 - Diagnoseprotokoll schreibt Zustandsaenderungen (vorhanden/fehlt/unbekannt) und
   Restartversuche, **nicht** jede der 15-Sekunden-Abfragen (weniger I/O und Akku).
-- Anruf-Test nur fuer exakt eingetragene Testnummer bei aktivierter Testfunktion und
-  ausgewaehltem verbundenem Bluetooth: **Anruf abweisen unabhaengig vom SMS-Sendestatus**;
-  SMS hoechstens einmal pro Nummer innerhalb von 10 Minuten anstossen.
+- Anruf-Automatik bei aktivierter Funktion und ausgewaehltem verbundenem Bluetooth:
+  **jeden eingehenden Anruf abweisen unabhaengig vom SMS-Sendestatus**. Wenn eine Rufnummer
+  vorhanden ist, wird hoechstens einmal pro Nummer innerhalb von 10 Minuten die Fahr-SMS
+  angestossen. Unterdrueckte oder fehlende Rufnummern werden abgewiesen, koennen aber
+  keine SMS erhalten.
 - Lokales Diagnoseprotokoll mit bis zu 30 Zeitstempel-Eintraegen, ohne Rufnummern.
 - Keine Verarbeitung eingehender SMS oder Messenger-Nachrichten.
 
 ## Wichtige Grenzen
-- Rydatent braucht **Bluetooth-Berechtigung** und **Benachrichtigungszugriff**;
-  fuer eine sichtbare Fahrmodus-Benachrichtigung zudem `POST_NOTIFICATIONS`.
-  Fehlt der Benachrichtigungszugriff, startet Rydatent **nicht blind** neu.
+- Rydatent braucht `BLUETOOTH_CONNECT` fuer gekoppelte Geraete und als Laufzeitvoraussetzung
+  des `connectedDevice`-Vordergrunddienstes. `READ_CONTACTS` bleibt absichtlich erforderlich,
+  damit Android dem CallScreeningService auch Anrufe gespeicherter Kontakte uebergibt.
+  `SEND_SMS` ist fuer die Fahrantwort erforderlich. Der **Benachrichtigungszugriff** ist
+  erforderlich, weil die Blitzer-Wache dessen aktive Benachrichtigung prueft.
+  `POST_NOTIFICATIONS` bleibt erforderlich, damit die sichtbare Benachrichtigung
+  "Fahrmodus aktiv" im Benachrichtigungsbereich erscheint.
 - Eine Benachrichtigung ist nur das vereinbarte Indiz fuer eine aktive Blitzer-App,
   kein Nachweis, dass die Warnfunktion technisch arbeitet. Eine andere noch sichtbare
   Blitzer.de-Benachrichtigung kann einen Neustart verhindern.
@@ -38,8 +44,8 @@ Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
   Echtzeitgarantie bei Android-Energiespar- oder Prozessbeschraenkungen.
 - Der Bluetooth-Zustand beruht noch auf ACL-Ereignissen; eine unabhaengige
   Synchronisation nach Reboot oder verpassten Ereignissen fehlt.
-- Die CallScreeningService-Rolle sowie READ_CONTACTS fuer gespeicherte Kontakte
-  muessen vorhanden sein. Die bisher getestete Anruf-/SMS-Logik bleibt unveraendert.
+- Die CallScreeningService-Rolle muss vorhanden sein. Es werden keine Berechtigungen
+  fuer eingehende SMS, Telefonstatus oder das direkte Fuehren von Anrufen angefordert.
 - SMS nutzt die Standard-SIM; SIM-1-Auswahl und echte Zustellbestaetigung fehlen.
 - dev.4 zeigt Hintergrundbeschraenkung und Akkuoptimierungs-Ausnahme getrennt an.
   Der Nutzer kann die Android-App-Einstellungen zum Anpassen oeffnen.
@@ -48,8 +54,8 @@ Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
   direkt als GitHub-Prerelease. Kein lokaler APK-Download erforderlich.
 
 ## Reproduzierbarer Test
-1. Dev.3 ueber Obtainium installieren und Blitzer-Wache per
-   Benachrichtigungszugriff erlauben. Bluetooth-/Benachrichtigungsrechte pruefen.
+1. Dev.5 ueber Obtainium installieren. Bluetooth, Kontakte, SMS-Versand,
+   Anruffilter-Rolle, Benachrichtigungszugriff und Fahrmodus-Benachrichtigung pruefen.
 2. Mit ausgewaehltem Bluetooth verbinden: Blitzer startet; die Rydatent-
    Benachrichtigung "Fahrmodus aktiv" erscheint und das Protokoll zeigt
    den Start. Blitzer soll eine eigene Benachrichtigung erzeugen.
@@ -61,8 +67,9 @@ Kein Stable-Release. Die Testoberflaeche bleibt bewusst technisch.
    Rydatent-Fahrmodus-Benachrichtigung verschwindet; keine Neustarts mehr.
 6. Mit gesperrtem Bildschirm erneut verbinden und den Fahrmodus pruefen.
    Bei Fehler zuerst das Diagnoseprotokoll auswerten.
-7. Anruf-Regression: Zwei Anrufe derselben Testnummer binnen 10 Minuten:
-   beide abweisen, nur eine Test-SMS anstossen.
+7. Anruf-Smoke-Test: Zwei Anrufe derselben Nummer binnen 10 Minuten:
+   beide abweisen, nur eine SMS anstossen. Danach von einer zweiten Nummer anrufen:
+   auch diesen Anruf abweisen und fuer diese Nummer eine SMS anstossen.
 
 ## Lokale Qualitaetspruefung
 `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease`

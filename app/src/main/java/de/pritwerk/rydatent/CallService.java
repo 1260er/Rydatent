@@ -19,15 +19,12 @@ public class CallService extends CallScreeningService {
                 ? null : call.getHandle().getSchemeSpecificPart();
         boolean enabled = Prefs.get(this).getBoolean("reply_enabled", false);
         boolean connected = Prefs.connected(this, "sms");
-        String testNumber = Prefs.get(this).getString("test_number", "");
-        boolean reject = Logic.shouldReply(number, testNumber, enabled, connected);
+        boolean reject = Logic.shouldRejectCall(enabled, connected);
 
         String reason;
-        if (!enabled) reason = "Testregel deaktiviert";
+        if (!enabled) reason = "Anrufautomatik deaktiviert";
         else if (!connected) reason = "kein ausgewähltes Anruf-Bluetooth erkannt";
-        else if (number == null || number.isBlank()) reason = "keine Rufnummer";
-        else if (!number.equals(testNumber)) reason = "Testnummer abweichend";
-        else reason = "Testregel passt";
+        else reason = "Anrufautomatik aktiv";
         Prefs.note(this, "Anruf geprüft: " + reason);
 
         // Die Abweisung muss innerhalb von 5 Sekunden erfolgen. Insbesondere
@@ -39,6 +36,10 @@ public class CallService extends CallScreeningService {
         Prefs.note(this, reject ? "Anrufabweisung angefordert" : "Anruf zugelassen");
 
         if (!reject) return;
+        if (number == null || number.isBlank()) {
+            Prefs.note(this, "Anruf abgewiesen; keine Rufnummer für SMS");
+            return;
+        }
         if (checkSelfPermission(Manifest.permission.SEND_SMS)
                 != PackageManager.PERMISSION_GRANTED) {
             Prefs.note(this, "Anruf abgewiesen; SEND_SMS-Berechtigung fehlt");

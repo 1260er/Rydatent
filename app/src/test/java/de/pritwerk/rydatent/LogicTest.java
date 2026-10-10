@@ -10,18 +10,17 @@ public class LogicTest {
         assertFalse(Logic.shouldRun(Set.of("A"), Set.of("B")));
     }
 
-    @Test public void noSmsOutsideExplicitConditions() {
-        assertFalse(Logic.shouldReply("123", "123", false, true));
-        assertFalse(Logic.shouldReply("123", "123", true, false));
-        assertFalse(Logic.shouldReply("999", "123", true, true));
-        assertFalse(Logic.shouldReply(null, "123", true, true));
-        assertTrue(Logic.shouldReply("123", "123", true, true));
+    @Test public void callAutomationRequiresEnabledAndConnected() {
+        assertFalse(Logic.shouldRejectCall(false, true));
+        assertFalse(Logic.shouldRejectCall(true, false));
+        assertFalse(Logic.shouldRejectCall(false, false));
+        assertTrue(Logic.shouldRejectCall(true, true));
     }
 
     @Test public void cooldownDoesNotSuppressRejection() {
-        assertTrue(Logic.shouldReply("123", "123", true, true));
+        assertTrue(Logic.shouldRejectCall(true, true));
         assertFalse(Logic.smsCooldownElapsed(1_000_000L, 1_000_001L));
-        assertTrue(Logic.shouldReply("123", "123", true, true));
+        assertTrue(Logic.shouldRejectCall(true, true));
         assertTrue(Logic.smsCooldownElapsed(1_000_000L, 1_600_000L));
         assertTrue(Logic.smsCooldownElapsed(0L, 1_000_001L));
     }

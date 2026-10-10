@@ -79,8 +79,7 @@ public final class BlitzerWatchService extends Service {
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             Notification note = new Notification.Builder(this, CHANNEL)
                     .setSmallIcon(android.R.drawable.ic_menu_compass)
-                    .setContentTitle("Rydatent – Fahrmodus aktiv")
-                    .setContentText("Blitzer.de wird alle 15 Sekunden geprüft")
+                    .setContentTitle("Fahrmodus aktiv")
                     .setOngoing(true)
                     .setContentIntent(tap)
                     .build();
