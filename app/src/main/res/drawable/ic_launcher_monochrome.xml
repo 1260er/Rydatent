@@ -16,7 +16,7 @@
 
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M75,22 L90,28 L75,34 L79,28 Z" />
+        android:pathData="M70,23.5 L90,28 L70,32.5 L77,28 Z" />
 
     <!-- linke Straßenkante -->
     <path
