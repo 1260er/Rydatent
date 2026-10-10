@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
                     WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
             view.setPadding(
                     dp(20) + bars.left,
-                    dp(16) + bars.top,
+                    bars.top,
                     dp(20) + bars.right,
                     Math.max(dp(16), bars.bottom));
             return insets;
