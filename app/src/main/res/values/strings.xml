@@ -19,6 +19,10 @@
     <string name="automation_autostart_hint">Autostart takes effect on the next device restart. Opening Rydatent activates automation for the current session.</string>
     <string name="automation_blitzer_hint">While a selected Bluetooth device is connected, Blitzer.de is monitored every 15 seconds.</string>
     <string name="automation_calls_hint">While a selected Bluetooth device is connected, incoming calls are rejected. One SMS per caller can be sent within 10 minutes.</string>
+    <string name="sms_text_label">Automatic SMS text</string>
+    <string name="action_save_sms_text">Save SMS text</string>
+    <string name="toast_sms_text_saved">SMS text saved.</string>
+    <string name="toast_sms_text_required">SMS text must not be empty.</string>
     <string name="action_start_blitzer">Test Blitzer.de start</string>
     <string name="action_stop_blitzer">Test Blitzer.de stop</string>
     <string name="action_open_devices">Configure devices</string>

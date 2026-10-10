@@ -9,6 +9,10 @@ import java.util.Locale;
 import java.util.Set;
 
 final class Prefs {
+    private static final int MAX_HISTORY_ENTRIES = 30;
+    private static final String KEY_SMS_TEXT = "sms_reply_text";
+    private static final String DEFAULT_SMS_TEXT =
+            "Ich fahre gerade Motorrad, ich rufe zurück.";
     static SharedPreferences get(Context c) {
         return c.getSharedPreferences("test", Context.MODE_PRIVATE);
     }
@@ -33,6 +37,25 @@ final class Prefs {
         get(c).edit().putBoolean("runtime_enabled", enabled).commit();
     }
 
+    static String smsText(Context c) {
+        return get(c).getString(KEY_SMS_TEXT, DEFAULT_SMS_TEXT);
+    }
+
+    static boolean setSmsText(Context c, String text) {
+        String value = text == null ? "" : text.trim();
+
+        if (value.isEmpty()) {
+            return false;
+        }
+
+        get(c)
+                .edit()
+                .putString(KEY_SMS_TEXT, value)
+                .apply();
+
+        return true;
+    }
+
     static void clearActive(Context c) {
         get(c).edit().remove("connected").commit();
     }
@@ -47,7 +70,7 @@ final class Prefs {
         String[] entries = (when + " – " + message
                 + (old.isEmpty() ? "" : "\n" + old)).split("\n");
         StringBuilder result = new StringBuilder();
-        for (int index = 0; index < Math.min(entries.length, 30); index++) {
+        for (int index = 0; index < Math.min(entries.length, MAX_HISTORY_ENTRIES); index++) {
             if (index > 0) result.append('\n');
             result.append(entries[index]);
         }

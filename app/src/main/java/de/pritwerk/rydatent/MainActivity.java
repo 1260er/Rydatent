@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -465,6 +466,48 @@ public class MainActivity extends Activity {
         title(calls, R.string.device_calls);
         checkbox(calls, R.string.automation_calls, "reply_enabled");
         secondary(calls, getString(R.string.automation_calls_hint));
+
+        secondary(calls, getString(R.string.sms_text_label));
+
+        EditText smsText = new EditText(this);
+        smsText.setText(Prefs.smsText(this));
+        smsText.setTextSize(16);
+        smsText.setTextColor(color(R.color.ui_text_primary));
+        smsText.setMinLines(2);
+        smsText.setMaxLines(4);
+        smsText.setSingleLine(false);
+        smsText.setPadding(dp(12), dp(8), dp(12), dp(8));
+
+        LinearLayout.LayoutParams smsTextParams =
+                new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+        smsTextParams.topMargin = dp(8);
+
+        calls.addView(smsText, smsTextParams);
+
+        action(calls, R.string.action_save_sms_text, () -> {
+            boolean saved =
+                    Prefs.setSmsText(
+                            this,
+                            smsText.getText().toString());
+
+            if (saved) {
+                Toast.makeText(
+                        this,
+                        R.string.toast_sms_text_saved,
+                        Toast.LENGTH_SHORT)
+                        .show();
+            } else {
+                smsText.setText(Prefs.smsText(this));
+
+                Toast.makeText(
+                        this,
+                        R.string.toast_sms_text_required,
+                        Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
 
         LinearLayout startup = card();
         title(startup, R.string.automation_autostart);

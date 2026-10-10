@@ -7,8 +7,6 @@ import android.telecom.CallScreeningService;
 import android.telephony.SmsManager;
 
 public class CallService extends CallScreeningService {
-    private static final String SMS_TEXT = "Ich fahre gerade Motorrad, ich rufe zurück.";
-
     @Override
     public void onScreenCall(Call.Details call) {
         if (call.getCallDirection() != Call.Details.DIRECTION_INCOMING) {
@@ -62,7 +60,7 @@ public class CallService extends CallScreeningService {
                 return;
             }
             // Rückgabe bedeutet nur, dass der Versand angestoßen wurde.
-            sms.sendTextMessage(number, null, SMS_TEXT, null, null);
+            sms.sendTextMessage(number, null, Prefs.smsText(this), null, null);
             Prefs.get(this).edit().putLong(key, now).apply();
             Prefs.note(this, "SMS angestoßen; Zustellung nicht bestätigt");
         } catch (Exception ex) {

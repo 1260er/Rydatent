@@ -19,6 +19,10 @@
     <string name="automation_autostart_hint">Autostart wirkt beim nächsten Geräteneustart. Öffnen von Rydatent aktiviert die Automatik für die aktuelle Sitzung.</string>
     <string name="automation_blitzer_hint">Bei verbundenem ausgewähltem Bluetooth-Gerät wird Blitzer.de alle 15 Sekunden überwacht.</string>
     <string name="automation_calls_hint">Bei verbundenem ausgewähltem Bluetooth-Gerät werden eingehende Anrufe abgewiesen. Je Rufnummer kann innerhalb von 10 Minuten eine SMS gesendet werden.</string>
+    <string name="sms_text_label">Text der automatischen SMS</string>
+    <string name="action_save_sms_text">SMS-Text speichern</string>
+    <string name="toast_sms_text_saved">SMS-Text gespeichert.</string>
+    <string name="toast_sms_text_required">Der SMS-Text darf nicht leer sein.</string>
     <string name="action_start_blitzer">Blitzer.de-Start testen</string>
     <string name="action_stop_blitzer">Blitzer.de-Stopp testen</string>
     <string name="action_open_devices">Geräte konfigurieren</string>
